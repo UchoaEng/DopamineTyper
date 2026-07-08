@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+
+# Local dev output
+.vite/
+*.tsbuildinfo
+vite-dev.log
+vite-dev.err.log
+*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Test and coverage output
+coverage/
+playwright-report/
+test-results/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Codex/local agent scratch data
+.agents/
+
+# Package manager caches
+.npm/
+.pnpm-store/
+yarn-error.log*
+pnpm-debug.log*
