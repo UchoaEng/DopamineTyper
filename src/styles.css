@@ -415,6 +415,11 @@ h3 {
   padding: 12px;
   box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.05);
   animation: menu-in 0.14s ease both;
+  /* O JS limita max-height ao espaço até a borda da tela; o conteúdo
+     encolhe (min-height: 0) e rola internamente. */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 @keyframes menu-in {
@@ -596,6 +601,14 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
+}
+
+/* Menus sem lista própria rolam inteiros quando a tela é baixa. */
+.floating-menu > .streak-menu,
+.floating-menu > .settings-menu {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .app .card-actions .theme-current {
@@ -1220,8 +1233,10 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  max-height: 56vh;
-  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  max-height: 380px;
+  overflow-y: auto;
   padding-right: 4px;
 }
 
@@ -1419,6 +1434,10 @@ select:focus {
   max-height: 48vh;
   overflow-y: auto;
   padding: 4px 2px;
+  /* Bloco centralizado na tela; o texto continua alinhado à esquerda
+     dentro dele (62ch = largura das linhas de 60 caracteres). */
+  width: min(100%, 62ch);
+  margin-inline: auto;
 }
 
 .line {

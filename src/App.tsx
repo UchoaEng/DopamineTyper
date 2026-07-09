@@ -533,7 +533,7 @@ function FloatingMenu(props: {
 }) {
   const { triggerContent, triggerClassName, triggerLabel, align = 'right', panelClassName = '', children } = props
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -550,7 +550,21 @@ function FloatingMenu(props: {
     const width = panel.offsetWidth
     let left = align === 'right' ? t.right - width : t.left
     left = Math.max(margin, Math.min(left, window.innerWidth - width - margin))
-    setPos({ top: t.bottom + 8, left })
+    // Nunca passa das bordas da tela: o painel encolhe e o conteúdo
+    // (ex.: lista de temas) rola internamente. Se faltar espaço embaixo,
+    // o menu abre para cima do gatilho.
+    const spaceBelow = window.innerHeight - (t.bottom + 8) - margin
+    const spaceAbove = t.top - 8 - margin
+    let top: number
+    let maxHeight: number
+    if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+      maxHeight = Math.min(spaceAbove, 480)
+      top = Math.max(margin, t.top - 8 - Math.min(panel.offsetHeight, maxHeight))
+    } else {
+      top = Math.max(margin, t.bottom + 8)
+      maxHeight = Math.min(Math.max(spaceBelow, 160), 480)
+    }
+    setPos({ top, left, maxHeight })
   }, [align])
 
   useLayoutEffect(() => {
@@ -605,7 +619,12 @@ function FloatingMenu(props: {
             ref={panelRef}
             className={`floating-menu ${panelClassName}`}
             role="menu"
-            style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, visibility: pos ? 'visible' : 'hidden' }}
+            style={{
+              top: pos?.top ?? -9999,
+              left: pos?.left ?? -9999,
+              maxHeight: pos?.maxHeight,
+              visibility: pos ? 'visible' : 'hidden',
+            }}
           >
             {children(close)}
           </div>,
