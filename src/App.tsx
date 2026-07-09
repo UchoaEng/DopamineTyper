@@ -844,6 +844,7 @@ function CustomTextModal(props: {
   const [bookLanguages, setBookLanguages] = useState(lang === 'pt' ? 'pt,en' : 'en,pt')
   const [generatedWordCount, setGeneratedWordCount] = useState(120)
   const fileRef = useRef<HTMLInputElement>(null)
+  const overlayPointerStartedOnOverlay = useRef(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -871,7 +872,7 @@ function CustomTextModal(props: {
       setConfig((current) => ({ ...current, mode: 'custom' }))
       if (!value.trim()) {
         setTitle(lang === 'pt' ? 'Texto gerado' : 'Generated text')
-        setValue(buildGeneratedText(SAMPLE_PT, config.generationMode, generatedWordCount, config.delimiter))
+        setValue(generateTextFromCorpus(config, generatedWordCount))
       }
     }
     if (next === 'quote') {
@@ -975,7 +976,7 @@ function CustomTextModal(props: {
   function regenerateText() {
     setSource('generated')
     setTitle(lang === 'pt' ? 'Texto gerado' : 'Generated text')
-    setValue(buildGeneratedText(SAMPLE_PT, config.generationMode, generatedWordCount, config.delimiter))
+    setValue(generateTextFromCorpus(config, generatedWordCount))
   }
 
   const tabs: { id: ContentTab; label: string; icon: LucideIcon }[] = [
@@ -988,7 +989,19 @@ function CustomTextModal(props: {
   ]
 
   const modal = (
-    <div className="modal-overlay" onClick={onClose} role="presentation">
+    <div
+      className="modal-overlay"
+      role="presentation"
+      onPointerDown={(e) => {
+        overlayPointerStartedOnOverlay.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (overlayPointerStartedOnOverlay.current && e.target === e.currentTarget) {
+          onClose()
+        }
+        overlayPointerStartedOnOverlay.current = false
+      }}
+    >
       <div
         className="modal"
         role="dialog"
@@ -1274,6 +1287,11 @@ function CustomTextModal(props: {
   )
 
   return createPortal(modal, document.body)
+}
+
+function generateTextFromCorpus(config: PracticeConfig, count: number): string {
+  const base = buildWordPracticeText(Math.max(count, 50), 'space')
+  return buildGeneratedText(base, config.generationMode, count, config.delimiter)
 }
 
 function buildGeneratedText(

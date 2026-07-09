@@ -63,6 +63,7 @@ const AchievementUnlocked = React.forwardRef<
     ref
   ) => {
     const handleSecondaryActionClick = onSecondaryActionClick ?? onShare
+    const backdropPointerStartedOnBackdrop = React.useRef(false)
     const unlockedDateLabel = React.useMemo(() => {
       if (earnedDateLabel) return earnedDateLabel
       const input = achievement.unlockedAt ?? new Date().toISOString()
@@ -119,7 +120,15 @@ const AchievementUnlocked = React.forwardRef<
         <div
           className="fixed inset-0 z-[1000] bg-background/75 backdrop-blur-md"
           style={{ position: "fixed", inset: 0, width: "100vw", height: "100dvh" }}
-          onClick={() => onOpenChange(false)}
+          onPointerDown={(event) => {
+            backdropPointerStartedOnBackdrop.current = event.target === event.currentTarget
+          }}
+          onClick={(event) => {
+            if (backdropPointerStartedOnBackdrop.current && event.target === event.currentTarget) {
+              onOpenChange(false)
+            }
+            backdropPointerStartedOnBackdrop.current = false
+          }}
           aria-hidden="true"
         />
 
