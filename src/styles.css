@@ -1,4 +1,4 @@
-/* MacacoDigita — temas por CSS variables, mapeados também para os tokens do
+/* DopamineTyper - temas por CSS variables, mapeados também para os tokens do
    shadcn/Tailwind para que os componentes do Trophy UI sigam o tema ativo. */
 
 :root,
@@ -367,8 +367,11 @@ h3 {
 .brand-icon {
   width: 34px;
   height: 34px;
-  color: var(--hl);
   flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.85rem;
+  line-height: 1;
 }
 
 .brand h1 {

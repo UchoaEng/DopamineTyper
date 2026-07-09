@@ -1350,7 +1350,7 @@ function HomeScreen(props: {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `macacodigita-save-${todayStr()}.json`
+    a.download = `dopaminetyper-save-${todayStr()}.json`
     document.body.appendChild(a)
     a.click()
     a.remove()
@@ -1374,10 +1374,10 @@ function HomeScreen(props: {
     <main className="home">
       <header className="topbar">
         <div className="brand">
-          <Keyboard className="brand-icon" aria-hidden="true" />
+          <span className="brand-icon" aria-hidden="true">💊</span>
           <div>
             <h1>
-              Macaco<span>Digita</span>
+              Dopamine<span>Typer</span>
             </h1>
             <p className="tagline">{t('tagline', lang)}</p>
           </div>

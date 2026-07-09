@@ -1,6 +1,6 @@
-# MacacoDigita
+# DopamineTyper
 
-MacacoDigita e um app de treino de digitacao para estudo, leitura ativa e pratica diaria. Ele combina uma experiencia inspirada em ferramentas como Monkeytype com um dashboard proprio de textos, conquistas, temas, streak, pontos e progresso salvo localmente.
+DopamineTyper e um app de treino de digitacao para estudo, leitura ativa e pratica diaria. Ele combina uma experiencia inspirada em ferramentas como Monkeytype com um dashboard proprio de textos, conquistas, temas, streak, pontos e progresso salvo localmente.
 
 O projeto roda 100% no navegador: PDFs, textos, configuracoes e save state ficam no computador do usuario via `localStorage`. Nao ha backend proprio.
 

@@ -84,8 +84,21 @@ export interface SavedText {
   config?: PracticeConfig
 }
 
-const PROFILE_KEY = 'macacodigita:profile'
-const TEXTS_KEY = 'macacodigita:texts'
+const LEGACY_PROFILE_KEY = 'macacodigita:profile'
+const LEGACY_TEXTS_KEY = 'macacodigita:texts'
+const PROFILE_KEY = 'dopaminetyper:profile'
+const TEXTS_KEY = 'dopaminetyper:texts'
+
+function getStoredValue(key: string, legacyKey: string): string | null {
+  const raw = localStorage.getItem(key)
+  if (raw) return raw
+
+  const legacyRaw = localStorage.getItem(legacyKey)
+  if (legacyRaw) {
+    localStorage.setItem(key, legacyRaw)
+  }
+  return legacyRaw
+}
 
 export function todayStr(): string {
   const d = new Date()
@@ -122,7 +135,7 @@ function mergeProfile(parsed: Partial<Profile>): Profile {
 
 export function loadProfile(): Profile {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY)
+    const raw = getStoredValue(PROFILE_KEY, LEGACY_PROFILE_KEY)
     if (!raw) return defaultProfile()
     return mergeProfile(JSON.parse(raw) as Partial<Profile>)
   } catch {
@@ -136,7 +149,7 @@ export function saveProfile(p: Profile): void {
 
 export function loadTexts(): SavedText[] {
   try {
-    const raw = localStorage.getItem(TEXTS_KEY)
+    const raw = getStoredValue(TEXTS_KEY, LEGACY_TEXTS_KEY)
     return raw ? (JSON.parse(raw) as SavedText[]) : []
   } catch {
     return []
@@ -247,7 +260,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'text-complete', icon: GraduationCap,
-    pt: 'Macaco letrado', en: 'Learned monkey',
+    pt: 'Mente afiada', en: 'Sharp mind',
     descPt: 'Termine um texto inteiro', descEn: 'Finish an entire text',
     check: (_p, _r, textFinished) => textFinished,
   },
