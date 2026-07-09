@@ -40,6 +40,10 @@ export function normalizeText(
   return norm
 }
 
+export function removeTextAccents(text: string): string {
+  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+}
+
 export function applyGenerationMode(raw: string, mode: GenerationMode): string {
   if (mode === 'simple') return raw
   const words = raw.split(/\s+/).filter(Boolean)
@@ -59,6 +63,7 @@ export function applyGenerationMode(raw: string, mode: GenerationMode): string {
 export function applyPracticeFilters(raw: string, config: PracticeConfig): string {
   let text = normalizeText(raw, config)
   if (config.delimiter === 'pipe') text = text.replace(/\s*\|\s*/g, ' ')
+  if (config.removeAccents) text = removeTextAccents(text)
   if (!config.includePunctuation) text = text.replace(/[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/g, '')
   if (!config.includeNumbers) text = text.replace(/\d+/g, '')
   text = applyGenerationMode(text, config.generationMode)

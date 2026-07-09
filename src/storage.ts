@@ -49,6 +49,7 @@ export interface PracticeConfig {
   infinite?: boolean
   includePunctuation: boolean
   includeNumbers: boolean
+  removeAccents: boolean
   delimiter: WordDelimiter
   generationMode: GenerationMode
   wordsPerPhase: number

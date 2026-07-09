@@ -40,7 +40,7 @@ import {
 } from './contentSources'
 import { extractPdfText } from './pdf'
 import { t, type Lang } from './i18n'
-import { applyPracticeFilters, countWords, hashId, phaseInfo, phaseLineCount, quoteText, textToLines, timeModeLineCount } from './text'
+import { applyPracticeFilters, countWords, hashId, phaseInfo, phaseLineCount, quoteText, removeTextAccents, textToLines, timeModeLineCount } from './text'
 import { buildWordPracticeText } from './wordCorpus'
 import {
   ACHIEVEMENTS,
@@ -77,6 +77,7 @@ const DEFAULT_CONFIG: PracticeConfig = {
   infinite: false,
   includePunctuation: true,
   includeNumbers: true,
+  removeAccents: false,
   delimiter: 'space',
   generationMode: 'simple',
   wordsPerPhase: 50,
@@ -388,10 +389,12 @@ function PracticeLauncher({
           : 'Treino infinito',
       effective.mode === 'words'
         ? buildWordPracticeText(effective.wordLimit ?? 50, effective.delimiter)
+        : effective.mode === 'time'
+          ? buildWordPracticeText(timeModeWordTarget(effective.timeSeconds), effective.delimiter)
         : effective.mode === 'zen'
           ? SAMPLE_PT.repeat(6)
           : SAMPLE_PT,
-      effective.mode === 'words' ? { ...effective, generationMode: 'simple' } : effective,
+      effective.mode === 'words' || effective.mode === 'time' ? { ...effective, generationMode: 'simple' } : effective,
       'generated',
     )
     setLaunching(false)
@@ -413,6 +416,13 @@ function PracticeLauncher({
           aria-pressed={config.includeNumbers}
         >
           <Hash size={14} aria-hidden="true" /> números
+        </button>
+        <button
+          className={'filter-chip' + (config.removeAccents ? ' on' : '')}
+          onClick={() => setConfig({ ...config, removeAccents: !config.removeAccents })}
+          aria-pressed={config.removeAccents}
+        >
+          sem acentos
         </button>
 
         <span className="launcher-divider" aria-hidden="true" />
@@ -500,6 +510,15 @@ function PracticeLauncher({
     </section>
   )
 }
+
+function timeModeWordTarget(seconds?: number): number {
+  if (!seconds || seconds <= 10) return 60
+  if (seconds <= 30) return 110
+  if (seconds <= 60) return 170
+  if (seconds <= 120) return 260
+  return Math.min(600, Math.max(260, Math.ceil(seconds * 2.2)))
+}
+
 // ---------------------------------------------------------------------------
 // Menu flutuante reutilizável (popover não-modal): abre abaixo do gatilho,
 // fecha ao clicar fora ou apertar Esc. O usuário escolhe no próprio menu.
@@ -1182,6 +1201,14 @@ function CustomTextModal(props: {
                 />
                 números
               </label>
+              <label className="inline-check">
+                <input
+                  type="checkbox"
+                  checked={config.removeAccents}
+                  onChange={(e) => setConfig({ ...config, removeAccents: e.target.checked })}
+                />
+                remover acentos
+              </label>
               <p className="opt-hint">Espaço separa palavras normalmente. Pipe usa o caractere | para dividir grupos e depois reorganizar como palavras.</p>
               <div className="chips">
                 <button
@@ -1628,7 +1655,7 @@ const DEAD_KEYS = new Set(['"', "'", '`', '^', '~'])
 
 // Remove apenas os diacríticos, preservando a caixa: "á" → "a", "Á" → "A".
 function stripDiacritics(ch: string): string {
-  return ch.normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  return removeTextAccents(ch)
 }
 
 // Com acentos relaxados ("á" aceita "a") o usuário ganha menos pontos.
@@ -1785,7 +1812,9 @@ function TypingScreen(props: {
   function countNew(val: string) {
     const s = stats.current
     if (!s.start) s.start = performance.now()
+    const advancingWithSpace = isAdvanceSpace(val)
     for (let i = countedRef.current; i < val.length; i++) {
+      if (i >= line.length && advancingWithSpace) continue
       s.keystrokes++
       if (i < line.length && charMatches(val[i], line[i], relaxed)) {
         s.correct++
@@ -1803,7 +1832,7 @@ function TypingScreen(props: {
 
   // Linha correta: toca a próxima nota da melodia progressiva e avança.
   function advanceIfDone(val: string): boolean {
-    if (!textMatches(val, line, relaxed)) return false
+    if (!isAdvanceSpace(val)) return false
     audio.playLineNote(lineIdx, settings.volume)
     countedRef.current = 0
     setTyped('')
@@ -1813,6 +1842,10 @@ function TypingScreen(props: {
     }
     else setLineIdx(lineIdx + 1)
     return true
+  }
+
+  function isAdvanceSpace(val: string): boolean {
+    return val.length === line.length + 1 && val.endsWith(' ') && textMatches(val.slice(0, -1), line, relaxed)
   }
 
   function processValue(rawVal: string, isComposing: boolean) {
