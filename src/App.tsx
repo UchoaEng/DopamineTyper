@@ -13,6 +13,7 @@ import {
   Keyboard,
   Loader2,
   Palette,
+  Pill,
   Plus,
   Quote,
   RefreshCw,
@@ -1374,7 +1375,7 @@ function HomeScreen(props: {
     <main className="home">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-icon" aria-hidden="true">💊</span>
+          <Pill className="brand-icon" aria-hidden="true" />
           <div>
             <h1>
               Dopamine<span>Typer</span>
