@@ -179,12 +179,12 @@ async function fetchDummyQuote(size: QuoteSize, targetLang: ContentLang): Promis
   const selected = pickQuotesForSize(quotes, size)
   if (selected.length === 0) throw new Error('No quote returned')
   const parts = await Promise.all(
-    selected.map(async (quote) => formatRemoteQuote(quote.quote ?? '', quote.author, targetLang)),
+    selected.map(async (quote) => formatRemoteQuote(quote.quote ?? '', targetLang)),
   )
   const text = parts.join('\n\n')
   const author = selected.map((quote) => quote.author).filter(Boolean).join(', ')
   return {
-    title: author ? `Citacao - ${author}` : 'Citacao aleatoria',
+    title: author || unknownAuthorTitle(targetLang),
     text,
     author,
   }
@@ -203,20 +203,23 @@ async function fetchQuotableQuote(size: QuoteSize, targetLang: ContentLang): Pro
   if (usable.length === 0) throw new Error('No quote returned')
 
   const parts = await Promise.all(
-    usable.map(async (quote) => formatRemoteQuote(quote.content ?? '', quote.author, targetLang)),
+    usable.map(async (quote) => formatRemoteQuote(quote.content ?? '', targetLang)),
   )
   const text = parts.join('\n\n')
   const author = usable.map((quote) => quote.author).filter(Boolean).join(', ')
   return {
-    title: author ? `Citacao - ${author}` : 'Citacao aleatoria',
+    title: author || unknownAuthorTitle(targetLang),
     text,
     author,
   }
 }
 
-async function formatRemoteQuote(content: string, author: string | undefined, targetLang: ContentLang): Promise<string> {
-  const quote = targetLang === 'pt' ? await translateToPortuguese(content) : content.trim()
-  return `${quote}${author ? ` - ${author}` : ''}`
+async function formatRemoteQuote(content: string, targetLang: ContentLang): Promise<string> {
+  return targetLang === 'pt' ? translateToPortuguese(content) : content.trim()
+}
+
+function unknownAuthorTitle(targetLang: ContentLang): string {
+  return targetLang === 'pt' ? 'Autor desconhecido' : 'Unknown author'
 }
 
 async function translateToPortuguese(text: string): Promise<string> {
@@ -370,25 +373,41 @@ function stripBeforeMainContent(raw: string): string {
   const headings = findMainContentHeadings(text)
   if (headings.length === 0) return text
 
+  const contentsIndex = findContentsHeading(text)
   for (let i = 0; i < headings.length; i++) {
     const current = headings[i]
+    if (contentsIndex >= 0 && current.index <= contentsIndex) continue
+
     const next = headings[i + 1]?.index ?? text.length
     const section = text.slice(current.index, next)
-    const sectionWords = section.split(/\s+/).filter(Boolean).length
-
-    // Sumarios costumam ter varios titulos de capitulo muito proximos. Um
-    // capitulo real tem corpo suficiente antes do proximo marcador.
-    if (sectionWords >= 180 || next - current.index >= 1400) {
-      return text.slice(current.index).trim()
-    }
+    if (isProseSection(section)) return text.slice(current.index).trim()
   }
 
-  const last = headings[headings.length - 1]
-  const tail = text.slice(last.index)
-  return tail.split(/\s+/).filter(Boolean).length >= 80 ? tail.trim() : text
+  // Sem um inicio confiavel, preserva o livro em vez de cortar conteudo valido.
+  return text
 }
 
 function findMainContentHeadings(text: string): { index: number }[] {
+  const headings: { index: number }[] = []
+  const lines = text.split('\n')
+  let offset = 0
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    const folded = foldForDetection(trimmed)
+    const labeled = /^(chapter|capitulo|letter|carta|part|parte|book|livro|act|ato|scene|cena)\s+([ivxlcdm]+|\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/.test(folded)
+    const numbered = /^(?:[ivxlcdm]+|\d+)[.)]?\s+[a-z][a-z0-9 ',:;!?-]{1,90}(?:\s*\.{2,}\s*\d+|\s+\d+)?$/.test(folded)
+    const screenplay = /^(fade in:|int\.|ext\.)/.test(folded)
+
+    if (trimmed && (labeled || numbered || screenplay)) {
+      headings.push({ index: offset + line.length - line.trimStart().length })
+    }
+    offset += line.length + 1
+  }
+
+  if (headings.length > 0) return headings
+
+  // Compatibilidade com formatos menos regulares que ainda casam por bloco.
   const patterns = [
     /^\s*(chapter|capitulo|capitulo|capitulo|capítulo)\s+([ivxlcdm]+|\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b.*$/gim,
     /^\s*(letter|carta)\s+([ivxlcdm]+|\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b.*$/gim,
@@ -401,6 +420,36 @@ function findMainContentHeadings(text: string): { index: number }[] {
     .flatMap((pattern) => Array.from(text.matchAll(pattern), (match) => ({ index: match.index ?? 0 })))
     .filter((heading) => heading.index >= 0)
     .sort((a, b) => a.index - b.index)
+}
+
+function findContentsHeading(text: string): number {
+  const pattern = /^(table of contents|contents|sumario|indice)\s*[:.-]*$/i
+  const lines = text.split('\n')
+  let offset = 0
+  for (const line of lines) {
+    if (pattern.test(foldForDetection(line))) return offset
+    offset += line.length + 1
+  }
+  return -1
+}
+
+function foldForDetection(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isProseSection(section: string): boolean {
+  const words = section.split(/\s+/).filter(Boolean)
+  if (words.length < 120 && section.length < 1000) return false
+
+  const lines = section.split('\n').map((line) => line.trim()).filter(Boolean)
+  const proseLines = lines.filter((line) => line.split(/\s+/).length >= 7)
+  const dottedEntries = lines.filter((line) => /\.{2,}\s*\d+\s*$/.test(line))
+  return proseLines.length >= 2 && dottedEntries.length < Math.max(2, Math.ceil(lines.length / 3))
 }
 
 function trimLongText(raw: string): string {

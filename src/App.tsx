@@ -371,7 +371,7 @@ function PracticeLauncher({
       } catch {
         setLaunchError(lang === 'pt' ? 'API indisponivel; usando citacao local.' : 'API unavailable; using local quote.')
         onStart(
-          `Citacao ${effective.quoteSize ?? 'medium'}`,
+          lang === 'pt' ? 'Citacao local' : 'Local quote',
           quoteText(effective.quoteSize ?? 'medium'),
           effective,
           'quote',
