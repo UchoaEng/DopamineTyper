@@ -1,287 +1,184 @@
 # DopamineTyper
 
-DopamineTyper e um app de treino de digitacao para estudo, leitura ativa e pratica diaria. Ele combina uma experiencia inspirada em ferramentas como Monkeytype com um dashboard proprio de textos, conquistas, temas, streak, pontos e progresso salvo localmente.
+A typing trainer for studying, active reading and daily practice. It blends a Monkeytype-inspired typing experience with its own dashboard of texts, achievements, themes, streaks, points and locally saved progress.
 
-O projeto roda 100% no navegador: PDFs, textos, configuracoes e save state ficam no computador do usuario via `localStorage`. Nao ha backend proprio.
+It runs 100% in the browser: PDFs, texts, settings and save state stay on your computer in `localStorage`. There's no backend.
 
-## Principais recursos
+[🇧🇷 Leia em português](#-português)
 
-- Treino rapido com modos de tempo, palavras, citacao e infinito.
-- Textos salvos com progresso por fase.
-- Upload de `.pdf` e `.txt`.
-- Extracao de PDF no cliente usando `pdfjs-dist`.
-- Busca de livros de dominio publico via Gutendex/Project Gutenberg.
-- Busca de roteiros/textos publicos via Internet Archive.
-- Citacoes aleatorias via APIs externas, com traducao para pt-BR quando o app esta em portugues.
-- Acervo local com 50 textos coerentes para o modo palavras.
-- Filtros de pontuacao e numeros.
-- Configuracao de delimitador por espaco ou pipe.
-- Temas desbloqueaveis por pontos.
-- Streak, calendario de dias ativos, conquistas e desafios diarios.
-- Exportacao e importacao de save em JSON.
-- Sons sintetizados com Web Audio API para tecla, erro, combo e resultado.
+## Features
+
+- Quick practice with time, words, quote and infinite modes.
+- Saved texts with progress per stage.
+- `.pdf` and `.txt` upload, with client-side PDF extraction via `pdfjs-dist`.
+- Public-domain book search via Gutendex / Project Gutenberg, with smart removal of front matter (table of contents, notes and editorial material) before the first real chapter.
+- Public scripts and archived texts via the Internet Archive.
+- Random quotes from external APIs, translated to Brazilian Portuguese when the app is in Portuguese; the author is shown as the text title.
+- Local collection of 50 coherent texts for words mode.
+- Punctuation and number filters, and space or pipe as delimiter.
+- Themes unlocked with points.
+- Streak, active-days calendar, achievements and daily challenges.
+- Save export and import as JSON.
+- Synthesized Web Audio sounds for keys, errors, combos and results.
+- Interface in Portuguese and English.
 
 ## Stack
 
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS 4
-- shadcn/ui
-- lucide-react
-- pdfjs-dist
-- Web Audio API
-- localStorage
+React 18 · TypeScript · Vite 6 · Tailwind CSS 4 · shadcn/ui · lucide-react · pdfjs-dist · Web Audio API · localStorage
 
-## Requisitos
+## Getting started
 
-- Node.js 18 ou superior
-- npm
-
-No Windows, os comandos tambem podem ser rodados como `npm.cmd install`, `npm.cmd run dev` e `npm.cmd run build`.
-
-## Como rodar
-
-Instale as dependencias:
+Requirements: Node.js 18+ and npm (on Windows you can also use `npm.cmd`).
 
 ```bash
 npm install
+npm run dev       # usually http://localhost:5173
+npm run build     # tsc -b + production build in dist/
+npm run preview   # serves dist/ locally
 ```
 
-Inicie o servidor de desenvolvimento:
+## Practice modes
 
-```bash
-npm run dev
-```
+| Mode | How it works |
+| --- | --- |
+| **Time** | Fixed duration: 10, 30, 60, 120 seconds or a custom value. Text is limited to a few lines for comfortable reading. |
+| **Words** | Fixed word count: 10, 25, 50, 100 or custom. Uses the 50 Portuguese texts in `src/wordCorpus.ts`, so you never type shuffled nonsense. |
+| **Quote** | Fetches quotes from external APIs (short, medium, long, huge), translated to pt-BR when needed, with a local fallback in `src/text.ts`. |
+| **Infinite** | No automatic end; finish manually with `Shift + Enter`. |
+| **Custom/PDF** | Paste text, open `.txt` or `.pdf`, search a public book, search an archived script, or generate text from settings. |
 
-Abra o endereco exibido pelo Vite, normalmente:
+## External sources
 
-```text
-http://localhost:5173
-```
+All integrations live in `src/contentSources.ts`.
 
-Gere o build de producao:
+- **Quotes:** DummyJSON Quotes, falling back to Quotable; translation via MyMemory; final fallback in `src/text.ts`.
+- **Public books:** Gutendex search and Project Gutenberg content, with Jina Reader as a reading/CORS fallback and a small local classics list. Before handing the text to practice, the app finds where the real prose begins: it skips the table of contents and short heading-only sections, and keeps the whole book when no reliable start is found instead of cutting valid content.
+- **Scripts and archived texts:** Internet Archive Advanced Search plus the item's text files, with Jina Reader as a fallback. Only public/archived material, no scraping of protected sites.
 
-```bash
-npm run build
-```
+## Dashboard and gamification
 
-Teste o build localmente:
+The home screen has a status bar (points, words typed, streak), an active-days calendar, language/volume/sound settings with save export and import, a quick-practice bar, daily challenges, saved texts (3 per page) and an achievements panel.
 
-```bash
-npm run preview
-```
-
-## Scripts
-
-```bash
-npm run dev
-```
-
-Inicia o Vite em modo desenvolvimento.
-
-```bash
-npm run build
-```
-
-Executa `tsc -b` e depois gera o build em `dist/`.
-
-```bash
-npm run preview
-```
-
-Serve o conteudo gerado em `dist/` para conferencia local.
-
-## Modos de treino
-
-### Tempo
-
-Treino com duracao definida. Presets atuais:
-
-- 10 segundos
-- 30 segundos
-- 60 segundos
-- 120 segundos
-- valor manual
-
-O texto e limitado a poucas linhas para manter leitura confortavel.
-
-### Palavras
-
-Treino por quantidade de palavras. Presets atuais:
-
-- 10 palavras
-- 25 palavras
-- 50 palavras
-- 100 palavras
-- valor manual
-
-Esse modo usa o acervo local em `src/wordCorpus.ts`, com 50 textos em portugues. O objetivo e evitar textos sem sentido gerados por embaralhamento de palavras soltas.
-
-### Citacao
-
-Busca citacoes em APIs externas e monta o treino. Quando o idioma esta em portugues, o conteudo e traduzido para pt-BR. Se a API ou a traducao falhar, o app usa fallback local em `src/text.ts`.
-
-Tamanhos:
-
-- curta
-- media
-- longa
-- gigante
-
-### Infinito
-
-Modo sem fim automatico. O usuario encerra manualmente com `Shift + Enter`.
-
-### Custom/PDF
-
-Permite colar texto, abrir `.txt`, abrir `.pdf`, buscar livro publico, buscar roteiro/texto arquivado ou gerar texto a partir de configuracoes.
-
-## Fontes externas
-
-As integracoes vivem em `src/contentSources.ts`.
-
-### Citacoes
-
-- Fonte principal: DummyJSON Quotes
-- Fallback: Quotable
-- Traducao: MyMemory Translated
-- Fallback final: banco local em `src/text.ts`
-
-### Livros publicos
-
-- Busca: Gutendex
-- Conteudo: Project Gutenberg
-- Fallback de leitura/CORS: Jina Reader
-- Fallback de lista: pequena biblioteca local de classicos em `src/contentSources.ts`
-
-Antes de entregar o texto ao treino, o app tenta remover tudo que vem antes do conteudo principal, como sumario, notas iniciais e material editorial. A limpeza procura marcadores como `Chapter`, `Capitulo`, `Part`, `Book`, `Letter`, `Act` e `Scene`, mas evita cortar em entradas de sumario muito curtas.
-
-### Roteiros e textos arquivados
-
-- Busca: Internet Archive Advanced Search
-- Conteudo: arquivos de texto disponiveis no item arquivado
-- Fallback de leitura/CORS: Jina Reader
-
-O objetivo e usar material publico/arquivado sem scraping de sites protegidos.
-
-## Dashboard
-
-A home possui:
-
-- barra de status com pontos, palavras digitadas e streak;
-- calendario de dias ativos no menu de streak;
-- configuracoes de idioma, volume, som e exportar/importar save;
-- barra de treino rapido;
-- desafios do dia;
-- lista de textos salvos;
-- painel de conquistas.
-
-A paginacao de `Meus textos` mostra 3 textos por pagina.
-
-## Gamificacao
-
-O perfil do usuario inclui:
-
-- pontos totais;
-- palavras digitadas;
-- historico de sessoes;
-- conquistas desbloqueadas;
-- streak de dias consecutivos;
-- dias ativos no mes;
-- bonus de dia ativo;
-- bonus de mes completo;
-- temas desbloqueaveis por pontos.
-
-Tudo fica salvo no navegador.
+The profile tracks total points, words typed, session history, unlocked achievements, consecutive-day streak, active days in the month, active-day and full-month bonuses, and themes unlocked with points. Everything is saved in the browser.
 
 ## Save state
 
-O menu de configuracoes permite exportar um arquivo `.json` com:
+Settings let you export a `.json` file with profile, settings, history, achievements, saved texts and text progress, and import it back later.
 
-- perfil;
-- configuracoes;
-- historico;
-- conquistas;
-- textos salvos;
-- progresso dos textos.
-
-O mesmo menu permite importar esse save novamente.
-
-## Estrutura do projeto
+## Project structure
 
 ```text
 src/
-  App.tsx                         Telas principais e fluxo do app
-  audio.ts                        Sons sintetizados com Web Audio API
-  contentSources.ts               APIs de citacoes, livros e roteiros
-  i18n.ts                         Textos de interface pt/en
-  index.css                       Entrada CSS/Tailwind
-  main.tsx                        Bootstrap React
-  pdf.ts                          Extracao de texto de PDF
-  storage.ts                      Tipos, temas, perfil e localStorage
-  styles.css                      Estilo principal do app
-  text.ts                         Normalizacao, filtros e quebra em linhas
-  wordCorpus.ts                   Acervo local do modo palavras
-  components/ui/                  Componentes de UI e conquistas
+  App.tsx              Main screens and app flow
+  audio.ts             Web Audio synthesized sounds
+  contentSources.ts    Quote, book and script APIs
+  i18n.ts              pt/en interface strings
+  main.tsx             React bootstrap
+  pdf.ts               PDF text extraction
+  storage.ts           Types, themes, profile and localStorage
+  styles.css           Main app styles
+  text.ts              Normalization, filters and line breaking
+  wordCorpus.ts        Local corpus for words mode
+  components/ui/       UI components and achievements
 ```
 
-Arquivos de configuracao:
+## Privacy
 
-```text
-components.json
-index.html
-package.json
-package-lock.json
-tsconfig.json
-vite.config.ts
-```
-
-## Persistencia local
-
-O app usa `localStorage` com chaves proprias para perfil e textos. Limpar dados do navegador pode apagar progresso, conquistas e configuracoes. Use a opcao de exportar save antes de limpar o navegador ou trocar de maquina.
-
-## Privacidade
-
-- PDFs e TXT sao processados localmente no navegador.
-- Textos importados por API dependem de requisicoes externas.
-- O save do usuario fica local, salvo no navegador.
-- Nao ha conta, login ou backend proprio.
+PDF and TXT files are processed locally. Texts imported from APIs depend on external requests. Your save stays in the browser; there's no account, login or backend. Clearing site data erases progress, so export your save before switching machines.
 
 ## Troubleshooting
 
-### O build falha com erro de permissao no Vite
+- **Build fails with a permission error in Vite:** some sandboxed environments block esbuild from reading `vite.config.ts` ("access denied"). Run `npm run build` from a regular terminal.
+- **Book, script or quote API failed:** external APIs can be slow, rate-limited or blocked by CORS. The main flows have fallbacks, but availability depends on the providers.
+- **PDF doesn't extract text:** scanned PDFs may contain only images; they'd need OCR.
+- **Reset progress:** clear the site data in the browser or import an older save.
 
-Em alguns ambientes sandboxados, o Vite/esbuild pode falhar ao resolver `vite.config.ts` com erro parecido com `Acesso negado`. Rode o build no terminal normal do projeto:
+## Build and deploy
+
+`npm run build` outputs to `dist/`, which can be hosted on any static host that supports SPAs (Netlify, Vercel, GitHub Pages or your own server).
+
+---
+
+## 🇧🇷 Português
+
+# DopamineTyper
+
+App de treino de digitação para estudo, leitura ativa e prática diária. Combina uma experiência inspirada no Monkeytype com um dashboard próprio de textos, conquistas, temas, streak, pontos e progresso salvo localmente.
+
+Roda 100% no navegador: PDFs, textos, configurações e save state ficam no seu computador via `localStorage`. Não há backend.
+
+### Principais recursos
+
+- Treino rápido com modos de tempo, palavras, citação e infinito.
+- Textos salvos com progresso por fase.
+- Upload de `.pdf` e `.txt`, com extração de PDF no próprio navegador via `pdfjs-dist`.
+- Busca de livros de domínio público via Gutendex / Project Gutenberg, removendo sumário, notas e material editorial antes do primeiro capítulo de verdade.
+- Roteiros e textos públicos via Internet Archive.
+- Citações aleatórias de APIs externas, traduzidas para pt-BR quando o app está em português; o autor aparece como título do texto.
+- Acervo local com 50 textos coerentes para o modo palavras.
+- Filtros de pontuação e números, e delimitador por espaço ou pipe.
+- Temas desbloqueáveis por pontos.
+- Streak, calendário de dias ativos, conquistas e desafios diários.
+- Exportação e importação do save em JSON.
+- Sons sintetizados com Web Audio API para tecla, erro, combo e resultado.
+- Interface em português e inglês.
+
+### Stack
+
+React 18, TypeScript, Vite 6, Tailwind CSS 4, shadcn/ui, lucide-react, pdfjs-dist, Web Audio API e localStorage.
+
+### Como rodar
+
+Requisitos: Node.js 18+ e npm (no Windows também funciona com `npm.cmd`).
 
 ```bash
-npm run build
+npm install
+npm run dev       # normalmente http://localhost:5173
+npm run build     # tsc -b + build de produção em dist/
+npm run preview   # serve o dist/ localmente
 ```
 
-### API de livro, roteiro ou citacao falhou
+### Modos de treino
 
-As APIs externas podem ficar lentas, limitar requisicoes ou falhar por CORS. O app tem fallbacks para os principais fluxos, mas a disponibilidade final depende dos provedores externos.
+- **Tempo:** duração definida de 10, 30, 60, 120 segundos ou valor manual; o texto fica limitado a poucas linhas.
+- **Palavras:** 10, 25, 50, 100 palavras ou valor manual, usando os 50 textos em português de `src/wordCorpus.ts`, para nunca digitar palavras embaralhadas sem sentido.
+- **Citação:** busca citações em APIs externas (curta, média, longa ou gigante), traduz para pt-BR quando necessário e usa o fallback local de `src/text.ts`.
+- **Infinito:** sem fim automático; encerre com `Shift + Enter`.
+- **Custom/PDF:** colar texto, abrir `.txt` ou `.pdf`, buscar livro público, buscar roteiro arquivado ou gerar texto pelas configurações.
 
-### PDF nao extrai texto
+### Fontes externas
 
-PDFs escaneados podem conter apenas imagem. Nesse caso, o app nao consegue extrair o texto sem OCR.
+As integrações ficam em `src/contentSources.ts`.
 
-### Quero resetar o progresso
+- **Citações:** DummyJSON Quotes, com fallback no Quotable; tradução pelo MyMemory; fallback final em `src/text.ts`.
+- **Livros públicos:** busca no Gutendex e conteúdo do Project Gutenberg, com Jina Reader como fallback de leitura/CORS e uma pequena biblioteca local de clássicos. Antes do treino, o app encontra onde a prosa começa de verdade: pula o sumário e seções só com títulos e, se não achar um início confiável, preserva o livro inteiro em vez de cortar conteúdo válido.
+- **Roteiros e textos arquivados:** Internet Archive Advanced Search e os arquivos de texto do item, com Jina Reader de fallback. Só material público/arquivado, sem scraping de sites protegidos.
 
-Use as opcoes do navegador para limpar dados do site ou importe um save antigo pelo menu de configuracoes.
+### Dashboard e gamificação
 
-## Build e deploy
+A home tem barra de status (pontos, palavras digitadas e streak), calendário de dias ativos, configurações de idioma, volume, som e exportar/importar save, barra de treino rápido, desafios do dia, textos salvos (3 por página) e painel de conquistas.
 
-Depois de rodar:
+O perfil guarda pontos totais, palavras digitadas, histórico de sessões, conquistas, streak de dias seguidos, dias ativos no mês, bônus de dia ativo e de mês completo, e temas desbloqueados por pontos. Tudo fica salvo no navegador.
 
-```bash
-npm run build
-```
+### Save state
 
-O conteudo final fica em:
+As configurações permitem exportar um `.json` com perfil, configurações, histórico, conquistas, textos salvos e progresso, e importar esse arquivo depois.
 
-```text
-dist/
-```
+### Estrutura do projeto
 
-Esse diretorio pode ser publicado em qualquer host estatico compativel com apps SPA, como Netlify, Vercel, GitHub Pages ou servidor proprio.
+A estrutura de `src/` está na versão em inglês acima: `App.tsx` (telas e fluxo), `audio.ts` (sons), `contentSources.ts` (APIs), `i18n.ts` (textos pt/en), `pdf.ts` (extração de PDF), `storage.ts` (perfil e localStorage), `text.ts` (normalização e filtros), `wordCorpus.ts` (acervo local) e `components/ui/` (componentes e conquistas).
+
+### Privacidade
+
+PDFs e TXT são processados localmente. Textos importados por API dependem de requisições externas. O save fica no navegador; não há conta, login ou backend. Limpar os dados do site apaga o progresso, então exporte o save antes de trocar de máquina.
+
+### Solução de problemas
+
+- **O build falha com erro de permissão no Vite:** alguns ambientes sandboxados impedem o esbuild de ler o `vite.config.ts` ("Acesso negado"). Rode `npm run build` num terminal normal.
+- **API de livro, roteiro ou citação falhou:** APIs externas podem ficar lentas, limitar requisições ou falhar por CORS. Os fluxos principais têm fallback, mas a disponibilidade depende dos provedores.
+- **O PDF não extrai texto:** PDFs escaneados podem ter só imagem e precisariam de OCR.
+- **Resetar o progresso:** limpe os dados do site no navegador ou importe um save antigo.
+
+### Build e deploy
+
+`npm run build` gera a pasta `dist/`, que pode ser publicada em qualquer host estático compatível com SPA (Netlify, Vercel, GitHub Pages ou servidor próprio).
